@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สุ่มเมนูอาหาร - Random Food Menu Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 70%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 1.25rem 2rem;
+      backdrop-filter: blur(16px);
+      background: rgba(15, 23, 42, 0.7);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .navbar-brand .icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .navbar-brand .icon::before {
+      content: '🍽️';
+      font-size: 1.2rem;
+    }
+
+    .navbar-nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .navbar-nav a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    .navbar-nav a:hover {
+      color: var(--text-primary);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 6rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--text-secondary);
+      font-weight: 300;
+    }
+
+    .card-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .food-card {
+      position: relative;
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      padding: 2.5rem;
+      box-shadow: var(--glass-shadow);
+      overflow: hidden;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .food-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    }
+
+    .food-card.fade-out {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    .food-card.fade-in {
+      animation: fadeInScale 0.5s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .card-image {
+      width: 100%;
+      height: 300px;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 1.75rem;
+      position: relative;
+      background: rgba(255,255,255,0.03);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: var(--transition);
+    }
+
+    .food-card:hover .card-image img {
+      transform: scale(1.03);
+    }
+
+    .card-image::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.3));
+    }
+
+    .food-name {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    .food-description {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.75rem;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .food-price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .btn-random {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 300px;
+      margin: 3.5rem auto 0;
+      padding: 1.125rem 2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Prompt', sans-serif;
+      font-size: 1.125rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-random::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transform: translateX(-100%);
+      transition: 0.6s;
+    }
+
+    .btn-random:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.5);
+      filter: brightness(1.1);
+    }
+
+    .btn-random:hover::before {
+      transform: translateX(100%);
+    }
+
+    .btn-random:active {
+      transform: translateY(-1px);
+    }
+
+    .btn-random:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-icon {
+      font-size: 1.25rem;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .food-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .food-item-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .food-item-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--accent);
+    }
+
+    .food-item-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-bottom: 1rem;
+    }
+
+    .food-item-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .food-item-card p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .price-badge {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.35rem 0.9rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    @media (max-width: 640px) {
+      .navbar {
+        padding: 1rem 1.25rem;
+      }
+      .navbar-nav {
+        gap: 1.25rem;
+      }
+      .navbar-nav a {
+        font-size: 0.85rem;
+      }
+      .food-card {
+        padding: 1.75rem;
+        margin: 0 0.5rem;
+      }
+      .card-image {
+        height: 240px;
+      }
+      .food-name {
+        font-size: 1.5rem;
+      }
+      .btn-random {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+      }
+      .container {
+        padding: 2rem 1rem 5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="#" class="navbar-brand">
+      <span class="icon"></span>
+      <span>Food Randomizer</span>
+    </a>
+    <div class="navbar-nav">
+      <a href="#">หน้าแรก</a>
+      <a href="menu.html">เมนูทั้งหมด</a>
+      <a href="#">เกี่ยวกับเรา</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>สุ่มเมนูอาหารวันนี้</h1>
+      <p>ไม่รู้จะกินอะไรดี? ให้ระบบช่วยสุ่มเมนูอาหารแสนอร่อยให้คุณ</p>
+    </header>
+
+    <div class="card-wrapper">
+      <div class="food-card" id="foodCard">
+        <div class="card-image">
+          <img id="foodImage" src="" alt="รูปเมนูอาหาร">
+        </div>
+        <h2 class="food-name" id="foodName">กำลังโหลด...</h2>
+        <p class="food-description" id="foodDesc">คลิกปุ่มสุ่มเพื่อดูเมนูอาหาร</p>
+        <div class="card-footer">
+          <span class="food-price" id="foodPrice">฿0</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-random" id="btnRandom" onclick="randomFood()">
+      <span class="btn-icon">🎲</span>
+      <span>สุ่มเมนูอาหาร</span>
+    </button>
+
+    <section class="food-grid" id="foodGrid">
+      <div class="food-item-card" onclick="selectFood(0)">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1voEI5BXeGoic214laG_ZCo8j8VXdk4nwcTttDgrCy4CF-OS9fpei8Qo&s=10" alt="ข้าวกะเพราเนื้อวากิว">
+        <h3>ข้าวกะเพราเนื้อวากิว</h3>
+        <p>เนื้อวากิวผัดกะเพราหอมๆ รสชาติจัดจ้าน</p>
+        <span class="price-badge">฿320</span>
+      </div>
+      <div class="food-item-card" onclick="selectFood(1)">
+        <img src="https://static.thairath.co.th/media/dFQROr7oWzulq5Fa7HSof3IKxOXbUEyRuvvbNbmFc2xKRJMFiPVZ5I8hrmgIYDLCrAD.jpg" alt="ผัดไทยกุ้งสด">
+        <h3>ผัดไทยกุ้งสด</h3>
+        <p>ผัดไทยต้นตำรับกับกุ้งสดตัวโต</p>
+        <span class="price-badge">฿180</span>
+      </div>
+      <div class="food-item-card" onclick="selectFood(2)">
+        <img src="https://www.manusmenu.com/wp-content/uploads/2016/06/salmon-sashimi-served-with-ponzu-and-wasabi.webp" alt="แซลมอนซาชิมิ">
+        <h3>แซลมอนซาชิมิ</h3>
+        <p>แซลมอนสดจากนอร์เวย์ เกรดพรีเมียม</p>
+        <span class="price-badge">฿450</span>
+      </div>
+      <div class="food-item-card" onclick="selectFood(3)">
+        <img src="https://www.recipetineats.com/tachyon/2023/01/Carbonara_6a.jpg" alt="สปาเก็ตตี้คาโบนาร่า">
+        <h3>สปาเก็ตตี้คาโบนาร่า</h3>
+        <p>ครีมซอสเข้มข้นกับไข่แดงและพาร์เมซาน</p>
+        <span class="price-badge">฿260</span>
+      </div>
+      <div class="food-item-card" onclick="selectFood(4)">
+        <img src="https://www.siftandsimmer.com/wp-content/uploads/2022/09/matcha-bingsu-featured.jpg" alt="บิงซูชาเขียว">
+        <h3>บิงซูชาเขียว</h3>
+        <p>น้ำแข็งใสรสชาเขียว หวานมัน ละมุนละไม</p>
+        <span class="price-badge">฿150</span>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const foods = [
+      {
+        id: 0,
+        name: 'ข้าวกะเพราเนื้อวากิว',
+        description: 'เนื้อวากิวเกรดพรีเมียมผัดกับใบกะเพราหอมๆ รสชาติจัดจ้าน แซ่บถึงเครื่อง เสิร์ฟกับข้าวหอมมะลิร้อนๆ',
+        price: '฿320',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1voEI5BXeGoic214laG_ZCo8j8VXdk4nwcTttDgrCy4CF-OS9fpei8Qo&s=10'
+      },
+      {
+        id: 1,
+        name: 'ผัดไทยกุ้งสด',
+        description: 'ผัดไทยต้นตำรับสูตรดั้งเดิม กับกุ้งสดตัวโต เต็มปากเต็มคำ เคล้าซอสเข้มข้น โรยถั่วบดและกุ้งแห้ง',
+        price: '฿180',
+        image: 'https://static.thairath.co.th/media/dFQROr7oWzulq5Fa7HSof3IKxOXbUEyRuvvbNbmFc2xKRJMFiPVZ5I8hrmgIYDLCrAD.jpg'
+      },
+      {
+        id: 2,
+        name: 'แซลมอนซาชิมิ',
+        description: 'แซลมอนสดตรงจากนอร์เวย์ เกรดซาชิมิ คัดพิเศษ เนื้อแน่น มันอร่อย เสิร์ฟกับวาซาบิและซอสถั่วเหลือง',
+        price: '฿450',
+        image: 'https://www.manusmenu.com/wp-content/uploads/2016/06/salmon-sashimi-served-with-ponzu-and-wasabi.webp'
+      },
+      {
+        id: 3,
+        name: 'สปาเก็ตตี้คาโบนาร่า',
+        description: 'ครีมซอสเข้มข้นสูตรอิตาเลียนแท้ กับไข่แดงสด ชีสพาร์เมซาน และเบคอนกรอบ หอมอร่อยลงตัว',
+        price: '฿260',
+        image: 'https://www.recipetineats.com/tachyon/2023/01/Carbonara_6a.jpg'
+      },
+      {
+        id: 4,
+        name: 'บิงซูชาเขียว',
+        description: 'น้ำแข็งใสเกล็ดหละละมุนรสชาเขียวเข้มข้น โรยด้วยถั่วแดงและโมจิ หวานมัน ละมุนละไม ดับร้อนได้ดี',
+        price: '฿150',
+        image: 'https://www.siftandsimmer.com/wp-content/uploads/2022/09/matcha-bingsu-featured.jpg'
+      }
+    ];
+
+    const card = document.getElementById('foodCard');
+    const imgEl = document.getElementById('foodImage');
+    const nameEl = document.getElementById('foodName');
+    const descEl = document.getElementById('foodDesc');
+    const priceEl = document.getElementById('foodPrice');
+    const btn = document.getElementById('btnRandom');
+
+    let lastIndex = -1;
+
+    function setFood(index) {
+      const food = foods[index];
+      imgEl.src = food.image;
+      imgEl.alt = food.name;
+      nameEl.textContent = food.name;
+      descEl.textContent = food.description;
+      priceEl.textContent = food.price;
+    }
+
+    function randomFood() {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> <span>กำลังสุ่ม...</span>';
+
+      card.classList.remove('fade-in');
+      card.classList.add('fade-out');
+
+      setTimeout(() => {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * foods.length);
+        } while (newIndex === lastIndex && foods.length > 1);
+        lastIndex = newIndex;
+
+        setFood(newIndex);
+
+        card.classList.remove('fade-out');
+        card.classList.add('fade-in');
+
+        btn.disabled = false;
+        btn.innerHTML = '<span class="btn-icon">🎲</span> <span>สุ่มเมนูอาหาร</span>';
+      }, 400);
+    }
+
+    function selectFood(index) {
+      lastIndex = index;
+      setFood(index);
+      card.classList.remove('fade-out');
+      card.classList.add('fade-in');
+    }
+
+    // Initialize with first food
+    setFood(0);
+    card.classList.add('fade-in');
+  </script>
+</body>
+</html>
